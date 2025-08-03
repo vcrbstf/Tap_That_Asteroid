@@ -8,12 +8,23 @@ import math
 # Initialize Pygame
 pygame.init()
 
+
+
+
 # Screen setup
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 800, 800
 FPS = 60
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Typing Shooter")
 clock = pygame.time.Clock()
+
+player_image = pygame.image.load("Pixel_Me.png").convert_alpha()
+enemy_image = pygame.image.load("BurtPixel_shooter.png").convert_alpha()
+laser_image = pygame.image.load("laser.png").convert_alpha()
+# Optionally scale it to match the current laser size:
+#laser_image = pygame.transform.scale(laser_image, (4, 4))  # Current laser size is 4x4 pixels
+
+
 
 # Colors
 WHITE = (255, 255, 255)
@@ -23,7 +34,7 @@ GREY = (50, 50, 50)
 GREEN = (0, 255, 0)
 
 # Font
-font = pygame.font.SysFont(None, 36)
+font = pygame.font.SysFont(None, 28)
 big_font = pygame.font.SysFont(None, 48)
 
 # Player setup
@@ -41,18 +52,11 @@ class Enemy:
         self.angle = math.atan2(player_pos[1] - y, player_pos[0] - x)  # Aim at player
 
     def draw(self, surface):
-        # Draw spaceship (triangle with cockpit)
-        ship_points = [
-            (self.x, self.y - 15),  # Top
-            (self.x - 15, self.y + 10),  # Bottom left
-            (self.x + 15, self.y + 10)  # Bottom right
-        ]
-        pygame.draw.polygon(surface, WHITE, ship_points)
-        pygame.draw.circle(surface, RED, (self.x, self.y - 5), 5)  # Cockpit
-        # Draw word below ship
+        surface.blit(enemy_image, (self.x - 15, self.y - 15))  # Centered on (self.x, self.y)
+
         typed_text = font.render(self.typed, True, RED)
         untyped_text = font.render(self.word[len(self.typed):], True, WHITE)
-        text_y = self.y + 20
+        text_y = self.y + 36 # <--- This controls how far below the enemy the word appears
         surface.blit(typed_text, (self.x - typed_text.get_width() // 2, text_y))
         surface.blit(untyped_text, (self.x - typed_text.get_width() // 2 + typed_text.get_width(), text_y))
 
@@ -86,7 +90,7 @@ class Laser:
         return not laser_rect.colliderect(enemy_rect)
 
     def draw(self, surface):
-        pygame.draw.rect(surface, GREEN, (self.x - 2, self.y - 2, 4, 4))
+        surface.blit(laser_image, (self.x - 2, self.y - 2))  # Centered on laser position
 
 # Word enemy setup
 def load_words_from_file(path):
@@ -263,12 +267,16 @@ async def game_loop():
                 lasers.remove(laser)
 
         # Draw player spaceship
-        pygame.draw.polygon(screen, WHITE, [
-            (player_pos[0], player_pos[1] - PLAYER_SIZE),  # Top
-            (player_pos[0] - PLAYER_SIZE, player_pos[1] + PLAYER_SIZE),  # Bottom left
-            (player_pos[0] + PLAYER_SIZE, player_pos[1] + PLAYER_SIZE)  # Bottom right
-        ])
+       # pygame.draw.polygon(screen, WHITE, [
+        #    (player_pos[0], player_pos[1] - PLAYER_SIZE),  # Top
+         #   (player_pos[0] - PLAYER_SIZE, player_pos[1] + PLAYER_SIZE),  # Bottom left
+          #  (player_pos[0] + PLAYER_SIZE, player_pos[1] + PLAYER_SIZE)  # Bottom right
+        #])
         pygame.draw.circle(screen, GREEN, (player_pos[0], player_pos[1] - 5), 5)  # Cockpit
+
+        # Draw player character image centered on player_pos
+        player_rect = player_image.get_rect(center=(player_pos[0], player_pos[1]))
+        screen.blit(player_image, player_rect)
 
         # Draw score
         score_text = font.render(f"Score: {score}", True, WHITE)
